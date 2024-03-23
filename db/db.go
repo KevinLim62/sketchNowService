@@ -4,32 +4,37 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
+	"sketchNow_service/repository"
 
-	"github.com/uptrace/bun"
-	"github.com/uptrace/bun/dialect/pgdialect"
-	"github.com/uptrace/bun/driver/pgdriver"
-	"github.com/uptrace/bun/extra/bundebug"
+	_ "github.com/lib/pq"
 )
 
-func ConnectDb(){
+type ApiConfig struct{
+DB *repository.Queries
+}
+
+func ConnectDb() (ApiConfig, error) {
 	ctx := context.Background()
 
-	// Open a PostgreSQL database.
-	dsn := "postgres://postgres:admin@localhost:5432/sketchNow?sslmode=disable"
-	pgdb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
+	connStr := "postgres://postgres:admin@localhost:5432/sketchNow?sslmode=disable"
+	db, err := sql.Open("postgres", connStr)
 
-	// Create a Bun db on top of it.
-	db := bun.NewDB(pgdb, pgdialect.New())
-
-	// Print all queries to stdout.
-	db.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(true)))
-
-	var rnd float64
-
-	// Select a random number.
-	if err := db.NewSelect().ColumnExpr("random()").Scan(ctx, &rnd); err != nil {
-		panic(err)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	fmt.Println(rnd)
+
+	apiCfg := ApiConfig{
+		DB: repository.New(db),
+	}
+
+
+   if err := db.PingContext(ctx); err != nil {
+	return apiCfg, err
+   }
+
+   fmt.Println("Connected to the database successfully!")
+
+   return apiCfg, nil
 }

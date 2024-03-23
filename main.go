@@ -1,30 +1,52 @@
 package main
 
 import (
+	"fmt"
+	"log"
 	"net/http"
+	"os"
 
 	"sketchNow_service/db"
-	"sketchNow_service/routes"
+	"sketchNow_service/handler"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
+	"github.com/joho/godotenv"
 )
 
 func main() {
-    r := chi.NewRouter()
-    r.Use(middleware.Logger)
+	godotenv.Load()
 
-	db.ConnectDb()
+	portString := os.Getenv("PORT")
+	if portString == ""{
+		log.Fatal("PORT environment variable not set")
+	}
+
+	r := chi.NewRouter()
+    r.Use(middleware.Logger)
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins: []string{"https://*", "http://*"},
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders: []string{"*"},
+		ExposedHeaders: []string{"Link"},
+		AllowCredentials: false,
+		MaxAge: 300,
+	}))
+
+	apiConfig , err := db.ConnectDb();
+	if err != nil {
+		fmt.Printf("Error connecting to database")
+	}
 
     r.Get("/", func(w http.ResponseWriter, r *http.Request) {
         w.Write([]byte("Hello World!"))
     })
-	
 
 	r.Route("/api", func(r chi.Router) {
-		r.Mount("/boardRoom", routes.BoardRoomRouter())
+		r.Mount("/boardRoom", handler.BoardRoomRouter(&apiConfig))
 	})
 
 	
-	http.ListenAndServe(":5000", r)
+	http.ListenAndServe(":"+portString, r)
 }
