@@ -8,6 +8,7 @@ import (
 
 	"sketchNow_service/db"
 	"sketchNow_service/handler"
+	"sketchNow_service/lib"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -22,6 +23,9 @@ func main() {
 	if portString == ""{
 		log.Fatal("PORT environment variable not set")
 	}
+
+	hub := lib.NewHub()
+	go hub.Run()
 
 	r := chi.NewRouter()
     r.Use(middleware.Logger)
@@ -45,8 +49,13 @@ func main() {
 
 	r.Route("/api", func(r chi.Router) {
 		r.Mount("/boardRoom", handler.BoardRoomRouter(&apiConfig))
+
+		
+		r.Get("/websocket", func(w http.ResponseWriter, r *http.Request) {
+			handler.WebsocketHander(hub,w,r)
+		})
 	})
 
-	
+
 	http.ListenAndServe(":"+portString, r)
 }
