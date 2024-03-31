@@ -3,10 +3,8 @@ package service
 import (
 	"context"
 
-	"log"
 	"net/http"
 	"sketchNow_service/db"
-	"sketchNow_service/lib"
 	"sketchNow_service/repository"
 
 	"github.com/google/uuid"
@@ -15,55 +13,53 @@ import (
 
 var ctx = context.Background()
 
-func CreateBoardRoom(w http.ResponseWriter, apiConfig *db.ApiConfig, createBoardRoomInput repository.CreateBoardRoomParams) {
-
-
+func CreateBoardRoom(w http.ResponseWriter, apiConfig *db.ApiConfig, createBoardRoomInput repository.CreateBoardRoomParams) (repository.Boardroom, error) {
 	boardRoom, err := apiConfig.DB.CreateBoardRoom(ctx, createBoardRoomInput)
 
 	if err != nil {
-		log.Fatal(err)
+		return boardRoom, err
 	}
 
-	lib.RespondWithJSON(w, 200, boardRoom)
+	return boardRoom, nil
 }
 
-func GetAllBoardRoom(w http.ResponseWriter,  apiConfig *db.ApiConfig ) {
+func GetAllBoardRoom(w http.ResponseWriter,  apiConfig *db.ApiConfig ) ([]repository.Boardroom, error)  {
 	boardRooms, err := apiConfig.DB.GetAllBoardRooms(ctx)
 
 	if err != nil {
-		log.Fatal(err)
+		return boardRooms, err
 	}
 
-	lib.RespondWithJSON(w, 200, boardRooms)
+	return boardRooms, nil
 }
 
-func GetOneBoardRoom(w http.ResponseWriter, apiConfig *db.ApiConfig, boardRoomId uuid.UUID) {
+func GetOneBoardRoom(w http.ResponseWriter, apiConfig *db.ApiConfig, boardRoomId uuid.UUID) (repository.Boardroom, error) {
 	boardRoom, err := apiConfig.DB.GetBoardRoomById(ctx, boardRoomId)
 
 	if err != nil {
-		log.Fatal(err)
+		return boardRoom, err
 	}
 
-	lib.RespondWithJSON(w, 200, boardRoom)
+	return boardRoom, nil
 }
 
-func UpdateBoardRoom(w http.ResponseWriter,  apiConfig *db.ApiConfig, updateBoardRoomInput repository.UpdateBoardRoomByIdParams) {
+func UpdateBoardRoom(w http.ResponseWriter,  apiConfig *db.ApiConfig, updateBoardRoomInput repository.UpdateBoardRoomByIdParams) (repository.Boardroom, error) {
 
 	boardRoom, err := apiConfig.DB.UpdateBoardRoomById(ctx, updateBoardRoomInput)
 
 	if err != nil {
-		log.Fatal(err)
+		return boardRoom, err
 	}
 
-	lib.RespondWithJSON(w, 200, boardRoom)
+	return boardRoom, nil
 }
 
-func DeleteBoardRoom(w http.ResponseWriter,  apiConfig *db.ApiConfig, boardRoomId uuid.UUID) {
+func DeleteBoardRoom(w http.ResponseWriter,  apiConfig *db.ApiConfig, boardRoomId uuid.UUID) (error) {
 	err := apiConfig.DB.DeleteBoardRoomById(ctx, boardRoomId)
 
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
-
-	lib.RespondWithJSON(w, 200, "board room deleted successfully")
+	
+	return nil
 }

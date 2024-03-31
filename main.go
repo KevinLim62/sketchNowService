@@ -9,10 +9,12 @@ import (
 	"sketchNow_service/db"
 	"sketchNow_service/handler"
 	"sketchNow_service/lib"
+	"sketchNow_service/service"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 )
 
@@ -51,8 +53,19 @@ func main() {
 		r.Mount("/boardRoom", handler.BoardRoomRouter(&apiConfig))
 
 		
-		r.Get("/websocket", func(w http.ResponseWriter, r *http.Request) {
-			handler.WebsocketHander(hub,w,r)
+		r.Get("/{boardRoomId}", func(w http.ResponseWriter, r *http.Request) {
+			boardRoomId, err := uuid.Parse(chi.URLParam(r ,"boardRoomId"))
+			if err != nil {
+			// Handle error: Invalid UUID format
+			lib.RespondWithError(w, 400, "Invalid boardRoomId")
+			return
+			}
+
+			result, err := service.GetOneBoardRoom(w, &apiConfig, boardRoomId)
+			if err != nil {
+				lib.RespondWithError(w, 400, err.Error())
+			}
+			handler.WebsocketHander(hub,w,r, result.ID)
 		})
 	})
 

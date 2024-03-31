@@ -7,22 +7,23 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
 
 const (
 	// Time allowed to write a message to the peer.
-	writeWait = 10 * time.Second
+	writeWait = 60 * time.Second
 
 	// Time allowed to read the next pong message from the peer.
-	pongWait = 60 * time.Second
+	pongWait = 120 * time.Second
 
 	// Send pings to peer with this period. Must be less than pongWait.
 	pingPeriod = (pongWait * 9) / 10
 
 	// Maximum message size allowed from peer.
-	maxMessageSize = 512
+	maxMessageSize = 1024
 )
 
 var (
@@ -46,6 +47,8 @@ type Client struct {
 	// The websocket connection.
 	Conn *websocket.Conn
 
+	BoardRoomId uuid.UUID
+	
 	// Buffered channel of outbound messages.
 	Send chan []byte
 }
@@ -87,7 +90,6 @@ func (h *Hub) Run() {
 			}
 		case message := <-h.broadcast:
 			for client := range h.clients {
-				log.Printf("Client: %v", client.Conn.RemoteAddr())
 				select {
 				case client.Send <- message:
 				default:
@@ -120,7 +122,7 @@ func (c *Client) ReadPump() {
 			}
 			break
 		}
-		fmt.Println("messages from connection",string(message))
+		fmt.Println("Message: ", string(message))
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 		c.Hub.broadcast <- message
 	}

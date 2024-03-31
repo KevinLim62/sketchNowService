@@ -32,11 +32,19 @@ func BoardRoomRouter(apiConfig *db.ApiConfig) chi.Router {
 			Name: body.Name,
 		}
 
-		service.CreateBoardRoom(w, apiConfig, payload)
+		result, err := service.CreateBoardRoom(w, apiConfig, payload)
+		if err != nil {
+			lib.RespondWithError(w, 400, err.Error())
+		}
+		lib.RespondWithJSON(w, 200, result)
 	})
 
 	c.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		service.GetAllBoardRoom(w, apiConfig)
+		result, err := service.GetAllBoardRoom(w, apiConfig)
+		if err != nil {
+			lib.RespondWithError(w, 400, err.Error())
+		}
+		lib.RespondWithJSON(w, 200, result)
 	})
 
 	c.Get("/{boardRoomId}", func(w http.ResponseWriter, r *http.Request) {
@@ -44,11 +52,15 @@ func BoardRoomRouter(apiConfig *db.ApiConfig) chi.Router {
 		boardRoomId, err := uuid.Parse(chi.URLParam(r ,"boardRoomId"))
 		if err != nil {
 			// Handle error: Invalid UUID format
-			http.Error(w, "Invalid boardRoomId", http.StatusBadRequest)
+			lib.RespondWithError(w, 400, "Invalid boardRoomId")
 			return
 		}
 
-		service.GetOneBoardRoom(w, apiConfig, boardRoomId)
+		result, err := service.GetOneBoardRoom(w, apiConfig, boardRoomId)
+		if err != nil {
+			lib.RespondWithError(w, 400, err.Error())
+		}
+		lib.RespondWithJSON(w, 200, result)
 	})
 
 	c.Put("/{boardRoomId}", func(w http.ResponseWriter, r *http.Request) {
@@ -60,7 +72,7 @@ func BoardRoomRouter(apiConfig *db.ApiConfig) chi.Router {
 		boardRoomId, err := uuid.Parse(chi.URLParam(r ,"boardRoomId"))
 		if err != nil {
 			// Handle error: Invalid UUID format
-			http.Error(w, "Invalid boardRoomId", http.StatusBadRequest)
+			lib.RespondWithError(w, 400, "Invalid boardRoomId")
 			return
 		}
 
@@ -76,18 +88,26 @@ func BoardRoomRouter(apiConfig *db.ApiConfig) chi.Router {
 			Name: body.Name,
 		}
 
-		service.UpdateBoardRoom(w, apiConfig, payload)
+		result, err := service.UpdateBoardRoom(w, apiConfig, payload)
+		if err != nil {
+			lib.RespondWithError(w, 400, err.Error())
+		}
+		lib.RespondWithJSON(w, 200, result)
 	})
 	c.Delete("/{boardRoomId}", func(w http.ResponseWriter, r *http.Request) {
 
 		boardRoomId, err := uuid.Parse(chi.URLParam(r ,"boardRoomId"))
 		if err != nil {
 			// Handle error: Invalid UUID format
-			http.Error(w, "Invalid boardRoomId", http.StatusBadRequest)
+			lib.RespondWithError(w, 400, "Invalid boardRoomId")
 			return
 		}
 
-		service.DeleteBoardRoom(w, apiConfig, boardRoomId)
+		err = service.DeleteBoardRoom(w, apiConfig, boardRoomId)
+		if err != nil {
+			lib.RespondWithError(w, 400, err.Error())
+		}
+		lib.RespondWithJSON(w, 200, "Successfully deleted boardRoom")
 	})
 	return c
 }
