@@ -5,8 +5,10 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 	"sketchNow_service/repository"
 
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
@@ -14,10 +16,12 @@ type ApiConfig struct{
 DB *repository.Queries
 }
 
+
 func ConnectDb() (ApiConfig, error) {
 	ctx := context.Background()
+	godotenv.Load()
+	connStr := os.Getenv("DB_URL")
 
-	connStr := "postgres://postgres:admin@localhost:5432/sketchNow?sslmode=disable"
 	db, err := sql.Open("postgres", connStr)
 
 	if err != nil {
